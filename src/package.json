@@ -1,13 +1,27 @@
 {
-  "title": "Addon",
-  "name": "addon",
+  "title": "João Espião",
+  "name": "joaoespiao",
   "version": "0.0.1",
-  "description": "Addon",
+  "description": "João Espião",
   "main": "index.js",
   "author": "Ivar Clemens",
   "engines": {
     "firefox": ">=38.0a1",
     "fennec": ">=38.0a1"
   },
-  "license": "Proprietary"
+  "license": "Proprietary",
+
+  "preferences": [{
+    "name": "sink",
+    "title": "Target for captured data",
+    "description": "All captured data will be POSTed to this URL.",
+    "type": "string",
+    "value": "http://forex.champalimaud.pt/sink"
+  }, {
+    "name": "filter",
+    "title": "Filter location",
+    "description": "Location of the URL filter, only URLs that match will be captured.",
+    "type": "string",
+    "value": "http://www.champalimaud.pt"
+  }]
 }
