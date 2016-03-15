@@ -3,13 +3,17 @@ var self = require('sdk/self');
 var buttons = require('sdk/ui/button/action');
 var tabs = require('sdk/tabs');
 
-//const Cc = Components.classes;
 let { Cc, Ci} = require('chrome');
 
-function TracingListener() {
+function TracingListener(serverAddress) {
+    this.serverAddress = "";
 }
 
 
+/**
+ * Class that sends captured data off to a remote server.
+ * It does not initiate the capture itself.
+ */
 TracingListener.prototype =
 {
   originalListener: null,
@@ -53,10 +57,11 @@ TracingListener.prototype =
 
   onStopRequest: function(request, context, statusCode) {    
     if(true) {
-      var xhr = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"].createInstance(Ci.nsIXMLHttpRequest);
-      console.log(this.receivedData.length);
-      try {
-        xhr.open("POST", "http://forex.champalimaud.pt/sink/", true);
+      var xhr = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"].createInstance(Ci.nsIXMLHttpRequest);      
+      console.log("Sending", this.receivedData.length, "bytes of data to server (address: " + this.serverAddress + ")");
+      
+      try {       
+        xhr.open("POST", this.serverAddress, true);
 
         var response = "Address: " + request.name + "\n\n"
 
@@ -65,8 +70,8 @@ TracingListener.prototype =
 
         response += "\n"
         xhr.send(response);
-      } catch(error) {
-        console.log("Could not send request to server: ", error);
+      } catch(exception) {
+        console.log("An exception occured while sending data to server:", exception);
       }
     }
 
@@ -83,13 +88,16 @@ TracingListener.prototype =
 }
 
 
-function eToroObserver()
+/**
+ * Main class
+ */
+function JoaoEspiaoObserver()
 {
   this.register();
 }
 
 
-eToroObserver.prototype =
+JoaoEspiaoObserver.prototype =
 {
   /**
    * Will be called when there is a notification for the registered observer.
@@ -105,8 +113,10 @@ eToroObserver.prototype =
       return;
 
     var newListener = new TracingListener();
+    newListener.serverAddress = "http://forex.champalimaud.org/sink";      
+    
     aSubject.QueryInterface(Ci.nsITraceableChannel);
-    newListener.originalListener = aSubject.setNewListener(newListener);
+    newListener.originalListener = aSubject.setNewListener(newListener);        
   },
 
   register: function() {
@@ -124,56 +134,4 @@ eToroObserver.prototype =
 /**
  * Register the observer
  */
-var observer = new eToroObserver();
-
-
-var button = require("sdk/ui/button/action").ActionButton({
-  id: "style-tab",
-  label: "Style Tab",
-  icon: "./icon-16.png",
-  onClick: function() {
-    require("sdk/tabs").activeTab.attach({
-      contentScript: 'setInterval(function() { document.getElementsByClassName("p-instrument-body")[0].scrollTop += 1000; }, 500);'
-    });
-  }
-});
-
-
-var button = require("sdk/ui/button/action").ActionButton({
-  id: "style-tab",
-  label: "Style Tab",
-  icon: "./icon-16.png",
-  onClick: function() {
-
-    xhr.onreadystatechange = function() {
-      if(xhr.readyState == 4) {
-        console.log(xhr.responseText);
-      }
-    }
-
-    //require("sdk/tabs").activeTab.attach({
-      //contentScript: 'setInterval(function() { document.getElementsByClassName("p-instrument-body")[0].scrollTop += 1000; }, 500);'
-    //});
-  }
-});
-
-
-/**
- * Create a button
- */
-/*var button = buttons.ActionButton({
-  id: 'mozilla-link',
-  label: 'Visit Mozilla',
-  icon: {
-    "16": "./icon-16.png",
-    "32": "./icon-32.png",
-    "64": "./icon-64.png"
-  },
-  onClick: handleClick
-});
-
-function handleClick(state)
-{
-  tabs.open("http://www.mozilla.org");
-  console.log("Hi");
-}*/
+var observer = new JoaoEspiaoObserver();
